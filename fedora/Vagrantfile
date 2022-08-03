@@ -1,0 +1,51 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+class VagrantPlugins::ProviderVirtualBox::Action::Network
+  def dhcp_server_matches_config?(dhcp_server, config)
+    true
+  end
+end
+
+Vagrant.configure("2") do |config|
+  config.vbguest.yes = true
+  config.vbguest.iso_path = "C:\\Program Files\\Oracle\\VirtualBox\\VBoxGuestAdditions.iso"
+  
+  config.vm.define "feiot" do |iot|
+    iot.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "384"
+      vb.name = "feiot"
+    end
+    iot.vm.box = "fkrull/fedora-iot"
+    iot.vm.hostname = "feiot"
+    iot.vm.network "private_network", ip: "192.168.88.31"
+  end
+
+  config.vm.define "fedesk", primary: true do |desktop|
+    desktop.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "2048"
+      vb.name = "fedesk"
+      vb.cpus = "2"
+    end
+    desktop.vm.box = "generic/fedora36"
+    desktop.vm.hostname = "fedesk"
+    desktop.vm.network "private_network", type: "dhcp"
+    desktop.vm.provision "shell", path: "init.sh"
+  end
+
+  config.vm.define "fesrv", primary: true do |srv|
+    srv.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "2048"
+      vb.name = "fesrv"
+      vb.cpus = "2"
+    end
+    srv.vm.box = "generic/fedora36"
+    srv.vm.hostname = "fesrv"
+    srv.vm.network "private_network", type: "dhcp"
+    srv.vm.provision "shell", path: "init.sh"
+  end
+
+end
